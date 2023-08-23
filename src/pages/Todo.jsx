@@ -2,9 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { TodoAdd, TodoRowDone, TodoRowWork } from "../components/Todo";
 import { deleteTodo, getTodos, updateStatusTodo } from "../apis/todoApi";
 import { SkeletonDefault } from "../components/Skeleton";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Todo() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+
   const todoQuery = useQuery({
     queryKey: ["todos"],
     queryFn: () => getTodos(),
@@ -17,6 +21,12 @@ export default function Todo() {
     mutationFn: (id) => updateStatusTodo(id),
     onSuccess: (data, variables, context) => {
       queryClient.prefetchQuery({ queryKey: ["todos"] });
+    },
+    onError(error) {
+      if (error?.response.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
     }
   });
 
@@ -24,8 +34,21 @@ export default function Todo() {
     mutationFn: (id) => deleteTodo(id),
     onSuccess: (data, variables, context) => {
       queryClient.prefetchQuery({ queryKey: ["todos"] });
+    },
+    onError(error) {
+      if (error?.response.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
     }
   });
+
+  useEffect(() => {
+    if (todoQuery.isError && todoQuery.error?.response.status === 401) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
+  }, [todoQuery]);
 
   return (
     <div className="h-100 w-full flex items-center justify-center bg-teal-lightest font-sans">
