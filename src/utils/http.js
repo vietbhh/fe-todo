@@ -6,7 +6,8 @@ class Http {
       baseURL: "http://localhost:8080/api/",
       timeout: 10000,
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`
       }
     });
   }
