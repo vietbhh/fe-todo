@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { loginAccount } from "../../apis/authApi";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 export default function Login() {
@@ -9,7 +9,10 @@ export default function Login() {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    setError,
+    reset,
+    clearErrors
   } = useForm();
 
   const loginMutation = useMutation({
@@ -18,15 +21,23 @@ export default function Login() {
       localStorage.setItem("token", data?.data.token);
     },
     onError: (data) => {
-      console.log("error: ", data);
+      setError("password", {
+        type: "server",
+        message: data?.response?.data?.messages.error
+      });
     },
     onSettled: () => {
-      navigate("/");
+      if (!errors.password) {
+        navigate("/");
+      }
     }
   });
 
   const onSubmit = (data) => {
     loginMutation.mutate(data);
+    reset({
+      password: ""
+    });
   };
 
   useEffect(() => {
@@ -79,6 +90,9 @@ export default function Login() {
           {errors.password && errors.password.type === "required" && (
             <span className="text-red-500">This is required</span>
           )}
+          {errors.password && errors.password.type === "server" && (
+            <span className="text-red-500">{errors.password.message}</span>
+          )}
         </div>
         <button
           type="submit"
@@ -88,12 +102,12 @@ export default function Login() {
         </button>
         <p className="text-sm font-light text-gray-500 dark:text-gray-400">
           Don’t have an account yet?
-          <a
-            href="#"
+          <Link
             className="font-medium text-primary-600 hover:underline dark:text-primary-500"
+            to={"/register"}
           >
             Sign up
-          </a>
+          </Link>
         </p>
       </form>
     </>

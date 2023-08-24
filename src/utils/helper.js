@@ -8,4 +8,8 @@ function checkToken() {
   return true;
 }
 
-export { checkToken };
+function logout() {
+  localStorage.removeItem("token");
+}
+
+export { checkToken, logout };

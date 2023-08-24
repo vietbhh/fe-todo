@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { registerAccount } from "../../apis/authApi";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -9,6 +9,8 @@ export default function Register() {
   const {
     register,
     handleSubmit,
+    setError,
+    reset,
     formState: { errors }
   } = useForm();
 
@@ -16,11 +18,24 @@ export default function Register() {
     mutationFn: (data) => registerAccount(data),
     onSuccess: () => {
       navigate("/login");
+    },
+    onError: (data) => {
+      const dataErrors = data.response.data.messages;
+      for (const key in dataErrors) {
+        setError(`${key}`, {
+          type: "server",
+          message: dataErrors[key]
+        });
+      }
     }
   });
 
   const onSubmit = (data) => {
     registerMutation.mutate(data);
+    reset({
+      password: "",
+      confirm_password: ""
+    });
   };
 
   return (
@@ -53,6 +68,9 @@ export default function Register() {
           {errors.username && errors.username.type === "minLength" && (
             <span className="text-red-500">This is invalid</span>
           )}
+          {errors.username && errors.username.type === "server" && (
+            <span className="text-red-500">{errors.username.message}</span>
+          )}
         </div>
         <div>
           <label
@@ -74,6 +92,9 @@ export default function Register() {
           )}
           {errors.email && errors.email.type === "minLength" && (
             <span className="text-red-500">This is invalid</span>
+          )}
+          {errors.email && errors.email.type === "server" && (
+            <span className="text-red-500">{errors.email.message}</span>
           )}
         </div>
         <div>
@@ -97,6 +118,9 @@ export default function Register() {
           {errors.password && errors.password.type === "minLength" && (
             <span className="text-red-500">This is invalid</span>
           )}
+          {errors.password && errors.password.type === "server" && (
+            <span className="text-red-500">{errors.password.message}</span>
+          )}
         </div>
         <div>
           <label
@@ -117,6 +141,12 @@ export default function Register() {
             errors.confirm_password.type === "required" && (
               <span className="text-red-500">This is required</span>
             )}
+          {errors.confirm_password &&
+            errors.confirm_password.type === "server" && (
+              <span className="text-red-500">
+                {errors.confirm_password.message}
+              </span>
+            )}
         </div>
         <button
           type="submit"
@@ -126,12 +156,12 @@ export default function Register() {
         </button>
         <p className="text-sm font-light text-gray-500 dark:text-gray-400">
           Don’t have an account yet?
-          <a
-            href="#"
+          <Link
             className="font-medium text-primary-600 hover:underline dark:text-primary-500"
+            to={"/login"}
           >
             Sign in
-          </a>
+          </Link>
         </p>
       </form>
     </>
